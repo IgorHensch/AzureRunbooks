@@ -2,13 +2,6 @@
 #Version:      1.0
 #Last Update:  03.11.2020
 
-#Required PS-Module:    AZ
-#Required IAM Role:     CustomRole prefers
-#Executes with Automation Accounts Credentials
-
-#Function:
-#Allocates or deallocates Azure VMs via assigned AAD Group and restarts the action if something went wrong
-
 Param 
 (    
     [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] 
@@ -23,7 +16,7 @@ Param
 ) 
 
 #Login to Azure Account via AZ Module   
-$Credential = Get-AutomationPSCredential -Name ''
+$Credential = Get-AutomationPSCredential -Name 'AutomationPSCredential'
 Connect-AzAccount -TenantId $TenantId -Credential $Credential | Out-Null
 
 Write-Output "========================================================"
@@ -34,11 +27,12 @@ Write-Output "Assignment Group: $AssignmentGroup"
 Write-Output ""
 Write-Output "--------------------------------------------------------"
 
-#Get all assigned Azure VMs to chosen group
+#Get all assigned Azure VMs to chosen group and save it
 $AzureVMsToHandle = (Get-AzRoleAssignment | Where-Object DisplayName -eq $AssignmentGroup).Scope | ForEach-Object {$_.Split("/")[-1]}
 
 #Allocate or deallocate Azure VMs
-function StartOrStop-VMs ($AzureVMsToHandle, $Action) {
+function StartOrStop-VMs ($AzureVMsToHandle, $Action) 
+{
     $number = 1   
     foreach ($AzureVM in $AzureVMsToHandle) 
     { 
@@ -47,7 +41,8 @@ function StartOrStop-VMs ($AzureVMsToHandle, $Action) {
         Write-Output "Number:       $number/$($AzureVMsToHandle.Count)"
         Write-Output "Start time:   $(Get-Date -UFormat "%r") UTC"
 
-        $Duration = ( Measure-Command {
+        $Duration = ( Measure-Command 
+        {
             if($Action -eq "Stop") 
             {  
                 Get-AzVM | Where-Object {$_.Name -eq $AzureVM} | Stop-azVM -Force | Out-Null
@@ -77,7 +72,8 @@ function Test-RunStatus ($AzureVMsToHandle, $Action) {
             }
         }
     }
-    If ($Action -eq "Start") {
+    If ($Action -eq "Start") 
+    {
         foreach ($AzureVM in $AzureVMsToHandle) { 
             If (((Get-azVM -Status | Where-Object {$_.Name -eq $AzureVM}).PowerState -eq "VM deallocated"))
             {
@@ -93,7 +89,8 @@ $AzureVMsForAction = Test-RunStatus -AzureVMsToHandle $AzureVMsToHandle -Action 
 
 $trial = 0
 
-do {
+do 
+{
 
     #Allocate or deallocate Azure VMs
     StartOrStop-VMs -AzureVMsToHandle $AzureVMsForAction -Action $Action
@@ -103,7 +100,8 @@ do {
 }
 
 #Restart action if something went wrong and wait 60 seconds
-while(!([string]::IsNullOrEmpty($AzureVMsForAction))){   
+while(!([string]::IsNullOrEmpty($AzureVMsForAction)))
+{   
 
     sleep 60
     StartOrStop-VMs -AzureVMsToHandle $AzureVMsForAction -Action $Action

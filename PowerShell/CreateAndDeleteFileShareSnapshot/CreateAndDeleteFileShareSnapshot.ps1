@@ -2,13 +2,6 @@
 #Version:      1.0
 #Last Update:  03.11.2020
 
-#Required PS-Module:    AZ
-#Required IAM Role:     CustomRole prefers
-#Executes with Automation Accounts Credentials
-
-#Function:
-#Creates a new snapshot of fileshare and deletes old snapshot(s)
-
      Param 
     (    
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] 
@@ -32,7 +25,7 @@
     )
 
     #Connect Azure Account
-    $Credential = Get-AutomationPSCredential -Name ''
+    $Credential = Get-AutomationPSCredential -Name 'AutomationPSCredential'
     Connect-AzAccount -TenantId $TenantId -Credential $Credential
 
     Write-Output "========================================================"
@@ -68,7 +61,8 @@
     
     $SnapshotsToDelete | ForEach-Object {
 
-        If(!([string]::IsNullOrEmpty($_))) {
+        If(!([string]::IsNullOrEmpty($_))) 
+        {
             Write-Output "SnapshotsToDelete:    $_"
             $_ | Remove-AzStorageShare -Force
         }
