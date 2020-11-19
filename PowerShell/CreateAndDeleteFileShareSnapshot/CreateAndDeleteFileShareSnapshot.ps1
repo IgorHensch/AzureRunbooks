@@ -57,7 +57,7 @@
     Write-Output "--------------------------------------------------------"
 
     #Deletes old Snapshots
-    $SnapshotsToDelete = Get-AzStorageShare -Context $storageAcct.Context | Where-Object {$_.IsSnapshot -eq $true -and $_.SnapshotTime.DateTime.ToShortDateString() -le "$((Get-Date).AddDays(-$ExpireAfterDays).ToShortDateString())" -and $_.Name -eq $ShareName}
+    $SnapshotsToDelete = Get-AzStorageShare -Context $storageAcct.Context | Where-Object {$_.IsSnapshot -eq $true -and $_.SnapshotTime.DateTime -le "$((Get-Date).AddDays(-$ExpireAfterDays).ToShortDateString())" -and $_.Name -eq $ShareName}
   
     $SnapshotsToDelete | ForEach-Object {
 
