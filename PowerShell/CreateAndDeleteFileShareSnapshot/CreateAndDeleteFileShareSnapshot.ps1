@@ -1,12 +1,9 @@
 ﻿##Author:      Igor Hensch
-#Version:      1.0
+#Version:      1.1
 #Last Update:  03.11.2020
 
      Param 
     (    
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] 
-        [String] 
-        $TenantId="",
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] 
         [String] 
         $ResourceGroup,
@@ -17,21 +14,28 @@
         [String] 
         $ShareName,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] 
-        [String] 
-        $StorageAccountKey,
+        [String]
+        $KeyVaultName,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] 
-        [int] 
+        [String]
+        $SecretName,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] 
+        [String]
         $ExpireAfterDays
+        
     )
 
     #Connect Azure Account
     $Credential = Get-AutomationPSCredential -Name 'AutomationPSCredential'
-    Connect-AzAccount -TenantId $TenantId -Credential $Credential
+    Connect-AzAccount -Credential $Credential | Out-Null
+
+    $StorageAccountKey = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $SecretName
 
     Write-Output "========================================================"
     Write-Output "Create File Share Snapshot"
     Write-Output "========================================================"
     Write-Output ""
+    Write-Output "Executed by:          StorageAdmin"
     Write-Output "ResourceGroup:        $ResourceGroup"
     Write-Output "StorageAccount:       $StorageAccountName"
     Write-Output "ShareFile:            $ShareName"
@@ -58,16 +62,16 @@
 
     #Deletes old Snapshots
     $SnapshotsToDelete = Get-AzStorageShare -Context $storageAcct.Context | Where-Object {$_.IsSnapshot -eq $true -and $_.SnapshotTime.DateTime -le "$((Get-Date).AddDays(-$ExpireAfterDays).ToShortDateString())" -and $_.Name -eq $ShareName}
-  
-    $SnapshotsToDelete | ForEach-Object {
+    If(!([string]::IsNullOrEmpty($SnapshotsToDelete))) 
+    {
+        $SnapshotsToDelete | ForEach-Object {
 
-        If(!([string]::IsNullOrEmpty($_))) 
-        {
             Write-Output "SnapshotsToDelete:    $($_ | select Name, IsSnapshot, SnapshotTime)"
-            $_ | Remove-AzStorageShare -Force
+            #$_ | Remove-AzStorageShare -Force
+            
         }
-
-        else{
-            Write-Output "SnapshotsToDelete:    None"
-        }
+    }
+    else
+    {
+        Write-Output "SnapshotsToDelete:    None"
     }
