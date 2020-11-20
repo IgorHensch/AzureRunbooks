@@ -15,12 +15,6 @@
         $ShareName,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] 
         [String]
-        $KeyVaultName,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] 
-        [String]
-        $SecretName,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] 
-        [String]
         $ExpireAfterDays
         
     )
@@ -28,8 +22,6 @@
     #Connect Azure Account
     $Credential = Get-AutomationPSCredential -Name 'AutomationPSCredential'
     Connect-AzAccount -Credential $Credential | Out-Null
-
-    $StorageAccountKey = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $SecretName
 
     Write-Output "========================================================"
     Write-Output "Create File Share Snapshot"
