@@ -1,6 +1,6 @@
 ﻿##Author:      Igor Hensch
 #Version:      1.1
-#Last Update:  03.11.2020
+#Last Update:  22.11.2020
 
      Param 
     (    
@@ -59,7 +59,7 @@
         $SnapshotsToDelete | ForEach-Object {
 
             Write-Output "SnapshotsToDelete:    $($_ | select Name, IsSnapshot, SnapshotTime)"
-            #$_ | Remove-AzStorageShare -Force
+            Remove-AzStorageShare $_.CloudFileShare -Force
             
         }
     }
